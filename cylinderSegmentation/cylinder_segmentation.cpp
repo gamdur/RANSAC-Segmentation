@@ -81,11 +81,6 @@ void showClouds(std::vector<pcl::PointCloud<PointT>::Ptr> clouds)
   p-> spin();
 }
 
-
-
-
-
-
 void PCLPointToCloud2 (pcl::PointCloud<PointT>& cloud, pcl::PCLPointCloud2& msg) {
     // Ease the user's burden on specifying width/height for unorganized datasets
     if (cloud.width == 0 && cloud.height == 0) {
@@ -112,11 +107,6 @@ void PCLPointToCloud2 (pcl::PointCloud<PointT>& cloud, pcl::PCLPointCloud2& msg)
     msg.is_dense   = cloud.is_dense;
     /// @todo msg.is_bigendian = ?;
 }
-
-
-
-
-
 
 void loadData (int argc, char **argv, std::vector<PCD, Eigen::aligned_allocator<PCD> > &models)
 {
@@ -256,43 +246,14 @@ void marchingCubes(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud) {
 }
 
 void clusterComponents (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud) {
-
-
-    // // Estimate Normals
-    // pcl::PointCloud<pcl::Normal>::Ptr normal_cloud (new pcl::PointCloud<pcl::Normal>);
-    // ne.setInputCloud (cloud);
-    // ne.compute (*normal_cloud);
-    // float* distance_map = ne.getDistanceMap ();
-    // boost::shared_ptr<pcl::EdgeAwarePlaneComparator<PointT,pcl::Normal> > eapc = boost::dynamic_pointer_cast<pcl::EdgeAwarePlaneComparator<PointT,pcl::Normal> >(edge_aware_comparator_);
-    // eapc->setDistanceMap (distance_map);
-    // eapc->setDistanceThreshold (0.01f, false);
-    //
-    // // Segment Planes
-    // double mps_start = pcl::getTime ();
-    // std::vector<pcl::PlanarRegion<PointT>, Eigen::aligned_allocator<pcl::PlanarRegion<PointT> > > regions;
-    // std::vector<pcl::ModelCoefficients> model_coefficients;
-    // std::vector<pcl::PointIndices> inlier_indices;
     pcl::PointCloud<pcl::Label>::Ptr labels (new pcl::PointCloud<pcl::Label>);
-    // std::vector<pcl::PointIndices> label_indices;
-    // std::vector<pcl::PointIndices> boundary_indices;
-    // mps.setInputNormals (normal_cloud);
-    // mps.setInputCloud (cloud);
-    // mps.segmentAndRefine (regions, model_coefficients, inlier_indices, labels, label_indices, boundary_indices);
-
 
     //Segment Objects
-    // std::vector<pcl::PointIndices> label_indices;
     pcl::EuclideanClusterComparator<PointT,  pcl::Normal, pcl::Label>::Ptr euclidean_cluster_comparator_ = pcl::EuclideanClusterComparator<PointT,  pcl::Normal, pcl::Label>::Ptr (new pcl::EuclideanClusterComparator<PointT,  pcl::Normal, pcl::Label> ());
     pcl::PointCloud<PointT>::CloudVectorType clusters;
 
-    // boost::shared_ptr<std::set<uint32_t> > plane_labels = boost::make_shared<std::set<uint32_t> > ();
-    // for (size_t i = 0; i < label_indices.size (); ++i)
-    //   if (label_indices[i].indices.size () > 10000)
-    //     plane_labels->insert (i);
-
     euclidean_cluster_comparator_->setInputCloud (cloud);
     euclidean_cluster_comparator_->setLabels (labels);
-    // euclidean_cluster_comparator_->setExcludeLabels (plane_labels);
     euclidean_cluster_comparator_->setDistanceThreshold (0.01f, false);
 
     pcl::PointCloud<pcl::Label> euclidean_labels;
@@ -300,17 +261,6 @@ void clusterComponents (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud) {
     pcl::OrganizedConnectedComponentSegmentation<PointT,pcl::Label> euclidean_segmentation (euclidean_cluster_comparator_);
     euclidean_segmentation.setInputCloud (cloud);
     euclidean_segmentation.segment (euclidean_labels, euclidean_label_indices);
-
-    // for (size_t i = 0; i < euclidean_label_indices.size (); i++) {
-    //     if (euclidean_label_indices[i].indices.size () > 1000)
-    //     {
-    //       pcl::PointCloud<PointT> cluster;
-    //       pcl::copyPointCloud (*cloud,euclidean_label_indices[i].indices,cluster);
-    //       clusters.push_back (cluster);
-    //     }
-    // }
-    //
-    // PCL_INFO ("Got %d euclidean clusters!\n", clusters.size ());
 }
 
 OUTPUT_CLOUD segmentPlane(pcl::PointCloud<PointT>::Ptr cloud_filtered, pcl::PointCloud<pcl::Normal>::Ptr cloud_normals, bool verbal) {
@@ -348,7 +298,6 @@ OUTPUT_CLOUD segmentPlane(pcl::PointCloud<PointT>::Ptr cloud_filtered, pcl::Poin
     output->cloud = cloud_plane;
     output->inliers = inliers_plane;
     output->coefficients = coefficients_plane;
-    // {cloud_plane, inliers_plane};
     return *output;
 }
 
@@ -394,11 +343,7 @@ OUTPUT_CLOUD segmentCylinder(pcl::PointCloud<PointT>::Ptr cloud_filtered2, pcl::
 
 bool isPlane(pcl::PointCloud<PointT>::Ptr cloud) {
     float threshold = 0.2;
-    // float threshold = 0.45;
 
-    // for (int i=0; i<clouds.size(); i++) {
-        // OUTPUT_CLOUD merged = mergeClouds(clouds[i], output);
-    // pcl::PointCloud<PointT>::Ptr merged_cloud = merged.cloud;
     pcl::PointCloud<pcl::Normal>::Ptr cloud_normals = extractNormals(cloud);
 
     OUTPUT_CLOUD segmented = segmentPlane(cloud, cloud_normals, false);
@@ -491,25 +436,6 @@ int main (int argc, char** argv)
   cout << "-----------------------------------------------------------------------" << endl;
   cout << "-----------------------------------------------------------------------" << endl;
 
-
-
-
-  // pcl::PCLPointCloud2::Ptr cloud2 (new pcl::PCLPointCloud2);
-  // std::string file = "Tango/pillar_short_2.ply";
-  // loadCloud2(file, *cloud2);
-  // pcl::PolygonMesh output;
-  // float iso_level = 0.0f;
-  // int hoppe_or_rbf = 1;
-  // float extend_percentage = 0.0f;
-  // int grid_res = 50;
-  // float off_surface_displacement = 0.01f;
-  // compute (cloud2, output, hoppe_or_rbf, iso_level, grid_res, extend_percentage, off_surface_displacement);
-  // cout << "mc size: " << output.polygons.size() << endl;
-
-
-
-
-
   // initialize visualizer
   p = new pcl::visualization::PCLVisualizer (argc, argv, "Pairwise Incremental Registration example");
   p->createViewPort (0.0, 0, 1.0, 1.0, vp_1);
@@ -543,21 +469,6 @@ int main (int argc, char** argv)
               if (!isPlane(output2.cloud)) {
                   cylinderClouds.push_back(output2);
               }
-
-              // marchingCubes(output2.cloud);
-
-              // pcl::PolygonMesh output;
-              // float iso_level = 0.0f;
-              // int hoppe_or_rbf = 1;
-              // float extend_percentage = 0.0f;
-              // int grid_res = 50;
-              // float off_surface_displacement = 0.01f;
-              // pcl::PCLPointCloud2::Ptr point_cloud2(new pcl::PCLPointCloud2);
-              // PCLPointToCloud2(*output2.cloud, *point_cloud2);
-              // compute (point_cloud2, output, hoppe_or_rbf, iso_level, grid_res, extend_percentage, off_surface_displacement);
-              // cout << "mc size: " << output.polygons.size() << endl;
-
-              // clusterComponents(output2.cloud);
           }
       }
 
@@ -569,10 +480,7 @@ int main (int argc, char** argv)
       cout << "cloud size: " << cloud_filtered->points.size() << endl;
   }
 
-  //cout << clouds.size() << endl;
-
   // visulaize clouds
-  // showTwoClouds(clouds[0], clouds[1]);
   std::vector<pcl::PointCloud<PointT>::Ptr> clouds = mergeCloudArrays(planeClouds, cylinderClouds);
   showClouds(clouds);
 
